@@ -4,6 +4,7 @@ import io
 import os
 import Learning
 import Detect
+import cv2
 
 #ネットから持ってきた画像読み込み関数
 def get_img_data(f, maxsize=(450, 300), first=False):
@@ -54,7 +55,7 @@ def get_DetectFrame():
         
     sample_path = r"C:\Users\gsnow\python_UI計画\Learning.png"
     sample_path2 = r"C:\Users\gsnow\python_UI計画\Detect.png"
-    sample_img_elem = sg.Image(data = get_img_data(sample_path,first = True))
+    sample_img_elem = sg.Image(data = get_img_data(sample_path,first = True),key = "-SAMPLE_IMAGE-")
     sample_img_elem2 = sg.Image(data = get_img_data(sample_path2,first = True))
     sub_image_frame = [sg.Frame('Image',layout = [[sample_img_elem, sample_img_elem2]])]
 
@@ -73,19 +74,24 @@ def get_DetectFrame():
     return Detect_frame
 
 #プレビュ関数
-def Preview():
+#左側の画像（オリジナル画像）のオブジェクトと画像パスを受け取り
+#左側の画像をその画像に更新する
+def Preview(sample_img_elem,sample_path):
     print("Preview")
-    pass
+    sample_img_elem.update(data = get_img_data(sample_path, first = True))
 
-#右側の画像を保存する
-def SaveResult():
+#右側の画像を保存する関数
+#保存する画像を受け取り直下のディレクトリにresult.pngとして保存する
+#引数の画像形式はopencvとする
+def SaveResult(result_img):
     print("SaveResult")
-    pass
+    cv2.imsave("result.jpg",result_img)
 
 if __name__ == "__main__":
     #GUIの大元のテーマ
     sg.theme("Dark Blue 3")
 
+    #レイアウト定義
     layout = [
         [sg.Text('Learning : 深層学習によるモデル生成   Detect : ニューラルネットを使った画像欠陥検知')],
         [sg.Text('データセットフォルダの中には教師ラベルと訓練画像を用意してください。フォルダ階層は下記の画像を参考にしてください')],
@@ -94,7 +100,11 @@ if __name__ == "__main__":
         get_DetectFrame()
     ]
 
+    #GUI作成
     window = sg.Window('深層学習による画像欠陥検知',layout)
+
+    #保存する欠陥画像の変数を定義しておく
+    result_img = cv2.imread(r"C:\Users\gsnow\python_UI計画\Detect.png")
 
     while True:
         event,values = window.read()
@@ -103,16 +113,16 @@ if __name__ == "__main__":
         if event is None:
             print("exit")
             break
-
         if event == "学習":
             Learning.Learning()
         if event == "プレビュ":
-            Preview()
+            Preview(window["-SAMPLE_IMAGE-"],values["-INPUT_IMAGE-"])
+            print(window["-SAMPLE_IMAGE-"])
         if event == "欠陥検知":
             result_img = Detect.Detect()
             #右側の画像の表示をアップデートする処理
         if event == "結果保存":
-            SaveResult()
+            SaveResult(resutlt_img)
             #保存完了というボップアップを出す        
 
     window.close()
